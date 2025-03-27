@@ -6,6 +6,20 @@ import UIKit
 let onClipboardChanged = "onClipboardChanged"
 
 public class ClipboardModule: Module {
+  private func makePasteboardOptions(ttl: Int?, isSensitive: Bool?) -> [UIPasteboard.OptionsKey: Any] {
+    var options: [UIPasteboard.OptionsKey: Any] = [:]
+
+    if let ttl = ttl, ttl > 0 {
+      options[.expirationDate] = Date().addingTimeInterval(TimeInterval(ttl))
+    }
+
+    if let localOnly = isSensitive {
+      options[.localOnly] = localOnly
+    }
+
+    return options
+  }
+
   public func definition() -> ModuleDefinition {
     Name("ExpoClipboard")
 
@@ -21,12 +35,18 @@ public class ClipboardModule: Module {
     }
 
     AsyncFunction("setStringAsync") { (content: String?, options: SetStringOptions) -> Bool in
-      switch options.inputFormat {
-      case .plainText:
-        UIPasteboard.general.string = content
-      case .html:
-        UIPasteboard.general.html = content
-      }
+      guard let content = content else { return false }
+
+      let items: [[String: Any]] = {
+        switch options.inputFormat {
+        case .plainText:
+          return [[UTType.plainText.identifier: content]]
+        case .html:
+          return [[UTType.html.identifier: content]]
+        }
+      }()
+
+      UIPasteboard.general.setItems(items, options: makePasteboardOptions(ttl: options.ttl, isSensitive: options.isSensitive))
 
       return true
     }

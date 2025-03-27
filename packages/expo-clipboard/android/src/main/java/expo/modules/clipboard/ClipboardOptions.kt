@@ -21,6 +21,12 @@ internal class GetStringOptions : Record {
 internal class SetStringOptions : Record {
   @Field
   var inputFormat: StringFormat = StringFormat.PLAIN
+
+  @Field
+  var ttl: Int? = null
+
+  @Field
+  var isSensitive: Boolean? = null
 }
 
 internal enum class ImageFormat(val jsName: String) : Enumerable {

@@ -32,6 +32,12 @@ internal struct GetStringOptions: Record {
 internal struct SetStringOptions: Record {
   @Field
   var inputFormat: StringFormat = .plainText
+
+  @Field
+  var isSensitive: Bool?
+
+  @Field
+  var ttl: Int?
 }
 
 internal enum StringFormat: String, Enumerable {

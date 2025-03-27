@@ -68,6 +68,29 @@ export type SetStringOptions = {
      * @default StringFormat.PLAIN_TEXT
      */
     inputFormat?: StringFormat;
+    /**
+     * Marks the clipboard content as sensitive.
+     *
+     * - On **Android**, sets the `ClipDescription.EXTRA_IS_SENSITIVE` flag to prevent
+     *   the clipboard content from appearing in system UI previews (e.g., Android 13 clipboard overlay).
+     * - On **iOS**, sets the clipboard entry as `localOnly`, which avoids syncing the content
+     *   to other Apple devices via iCloud.
+     *
+     * @platform android, ios
+     */
+    isSensitive?: boolean;
+    /**
+     * Time-to-live (TTL) in seconds before the clipboard content is automatically cleared.
+     * If provided, the clipboard will be cleared after the specified delay — but only
+     * if the user hasn’t copied anything else in the meantime.
+     *
+     * On **Android 10 (API 29)** and above, clipboard content cannot be reliably read
+     * while the app is in the background, so the content will be cleared unconditionally
+     * after the TTL expires (even if the user copied something else).
+     *
+     * @platform android, ios
+     */
+    ttl?: number;
 };
 export type AcceptedContentType = 'plain-text' | 'image' | 'url' | 'html';
 export type CornerStyleType = 'dynamic' | 'fixed' | 'capsule' | 'large' | 'medium' | 'small';

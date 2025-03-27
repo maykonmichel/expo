@@ -11,6 +11,11 @@ import android.text.Spanned
 import android.text.TextUtils
 import android.util.Log
 import androidx.core.os.bundleOf
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
+import androidx.work.ExistingWorkPolicy
 import expo.modules.core.utilities.ifNull
 import expo.modules.kotlin.exception.CodedException
 import expo.modules.kotlin.functions.Coroutine
@@ -18,6 +23,7 @@ import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 private const val moduleName = "ExpoClipboard"
 private val TAG = ClipboardModule::class.java.simpleName
@@ -46,15 +52,25 @@ class ClipboardModule : Module() {
     }
 
     AsyncFunction("setStringAsync") { content: String, options: SetStringOptions ->
+      val plainText = when (options.inputFormat) {
+        StringFormat.PLAIN -> content
+        // HTML clip requires complementary plain text content
+        StringFormat.HTML -> plainTextFromHtml(content)
+      }
       val clip = when (options.inputFormat) {
         StringFormat.PLAIN -> ClipData.newPlainText(null, content)
-        StringFormat.HTML -> {
-          // HTML clip requires complementary plain text content
-          val plainText = plainTextFromHtml(content)
-          ClipData.newHtmlText(null, plainText, content)
+        StringFormat.HTML -> ClipData.newHtmlText(null, plainText, content)
+      }
+      if (options.isSensitive == true && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+        val extras = android.os.PersistableBundle().apply {
+          putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true)
         }
+        clip.description.extras = extras
       }
       clipboardManager.setPrimaryClip(clip)
+      options.ttl?.let { seconds ->
+        scheduleClipboardExpiration(plainText, seconds)
+      }
       return@AsyncFunction true
     }
 
@@ -140,6 +156,23 @@ class ClipboardModule : Module() {
 
   private val clipboardCacheDir: File by lazy {
     File(context.cacheDir, CLIPBOARD_DIRECTORY_NAME).also { it.mkdirs() }
+  }
+
+  private fun scheduleClipboardExpiration(text: String, seconds: Int) {
+    val inputData = Data.Builder()
+      .putString("originalText", text)
+      .build()
+
+    val workRequest = OneTimeWorkRequestBuilder<ClipboardExpirationWorker>()
+      .setInitialDelay(seconds.toLong(), TimeUnit.SECONDS)
+      .setInputData(inputData)
+      .build()
+
+    WorkManager.getInstance(context).enqueueUniqueWork(
+      "clipboard-expiration-work",
+      ExistingWorkPolicy.REPLACE,
+      workRequest
+    )
   }
 
   // region Clipboard event emitter
