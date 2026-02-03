@@ -67,7 +67,33 @@ export type GetStringOptions = {
   preferredFormat?: StringFormat;
 };
 
-export type SetStringOptions = {
+export type CommonSetClipboardOptions = {
+  /**
+   * Time-to-live (TTL) in seconds after which the clipboard content should automatically expire and be cleared.
+   *
+   * When the expiration time is reached, the clipboard will only be cleared if the content hasn't been
+   * modified by the user (e.g., if they copied something else). This prevents accidentally clearing
+   * content that the user intended to keep.
+   *
+   * If omitted, the content persists indefinitely until manually cleared or replaced.
+   *
+   * **Platform behavior:**
+   * - **iOS**: Uses native `UIPasteboard` expiration. Content is cleared only if it matches what was originally set.
+   * - **Android**: Uses `WorkManager` to schedule expiration. On Android 10 (API 29) and above, background clipboard
+   *   access is restricted, so the content may be cleared unconditionally when the TTL expires, even if the user
+   *   has since copied other content.
+   *
+   * @platform ios, android
+   * @example
+   * ```ts
+   * // Clear clipboard after 5 minutes
+   * await Clipboard.setStringAsync('sensitive data', { ttl: 300 });
+   * ```
+   */
+  ttl?: number;
+};
+
+export type SetStringOptions = CommonSetClipboardOptions & {
   /**
    * The input format of the provided string.
    * Adjusting this option can help other applications interpret copied string properly.
@@ -76,6 +102,10 @@ export type SetStringOptions = {
    */
   inputFormat?: StringFormat;
 };
+
+export type SetUrlOptions = CommonSetClipboardOptions;
+
+export type SetImageOptions = CommonSetClipboardOptions;
 
 export type AcceptedContentType = 'plain-text' | 'image' | 'url' | 'html';
 

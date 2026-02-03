@@ -1,5 +1,5 @@
 import { type EventSubscription } from 'expo-modules-core';
-import type { ClipboardImage, ClipboardEvent, GetImageOptions, GetStringOptions, SetStringOptions } from './Clipboard.types';
+import type { ClipboardImage, ClipboardEvent, GetImageOptions, GetStringOptions, SetStringOptions, SetUrlOptions, SetImageOptions } from './Clipboard.types';
 import { ClipboardPasteButton } from './ClipboardPasteButton';
 export { EventSubscription as Subscription };
 /**
@@ -56,9 +56,10 @@ export declare function getUrlAsync(): Promise<string | null>;
  * clipboard contains a URL and behave accordingly.
  *
  * @param url The URL to save to the clipboard.
+ * @param options Options for the clipboard content to be set.
  * @platform ios
  */
-export declare function setUrlAsync(url: string): Promise<void>;
+export declare function setUrlAsync(url: string, options?: SetUrlOptions): Promise<void>;
 /**
  * Returns whether the clipboard has a URL content.
  *
@@ -91,6 +92,7 @@ export declare function getImageAsync(options: GetImageOptions): Promise<Clipboa
  * Sets an image in the user's clipboard.
  *
  * @param base64Image Image encoded as a base64 string, without MIME type.
+ * @param options Options for the clipboard content to be set.
  *
  * @example
  * ```tsx
@@ -101,7 +103,7 @@ export declare function getImageAsync(options: GetImageOptions): Promise<Clipboa
  * await Clipboard.setImageAsync(result.base64);
  * ```
  */
-export declare function setImageAsync(base64Image: string): Promise<void>;
+export declare function setImageAsync(base64Image: string, options?: SetImageOptions): Promise<void>;
 /**
  * Returns whether the clipboard has an image content.
  *

@@ -84,13 +84,14 @@ export async function getUrlAsync() {
  * clipboard contains a URL and behave accordingly.
  *
  * @param url The URL to save to the clipboard.
+ * @param options Options for the clipboard content to be set.
  * @platform ios
  */
-export async function setUrlAsync(url) {
+export async function setUrlAsync(url, options = {}) {
     if (!ExpoClipboard.setUrlAsync) {
         throw new UnavailabilityError('Clipboard', 'setUrlAsync');
     }
-    return ExpoClipboard.setUrlAsync(url);
+    return ExpoClipboard.setUrlAsync(url, options);
 }
 /**
  * Returns whether the clipboard has a URL content.
@@ -134,6 +135,7 @@ export async function getImageAsync(options) {
  * Sets an image in the user's clipboard.
  *
  * @param base64Image Image encoded as a base64 string, without MIME type.
+ * @param options Options for the clipboard content to be set.
  *
  * @example
  * ```tsx
@@ -144,11 +146,11 @@ export async function getImageAsync(options) {
  * await Clipboard.setImageAsync(result.base64);
  * ```
  */
-export async function setImageAsync(base64Image) {
+export async function setImageAsync(base64Image, options = {}) {
     if (!ExpoClipboard.setImageAsync) {
         throw new UnavailabilityError('Clipboard', 'setImageAsync');
     }
-    return ExpoClipboard.setImageAsync(base64Image);
+    return ExpoClipboard.setImageAsync(base64Image, options);
 }
 /**
  * Returns whether the clipboard has an image content.
