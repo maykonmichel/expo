@@ -18,10 +18,19 @@ internal class GetStringOptions : Record {
   var preferredFormat: StringFormat = StringFormat.PLAIN
 }
 
-internal class SetStringOptions : Record {
+internal open class CommonSetClipboardOptions : Record {
+  @Field
+  var ttl: Double? = null
+}
+
+internal class SetStringOptions : CommonSetClipboardOptions() {
   @Field
   var inputFormat: StringFormat = StringFormat.PLAIN
 }
+
+internal class SetUrlOptions : CommonSetClipboardOptions()
+
+internal class SetImageOptions : CommonSetClipboardOptions()
 
 internal enum class ImageFormat(val jsName: String) : Enumerable {
   JPG("jpeg"),
