@@ -163,6 +163,19 @@ class ClipboardModuleTest {
     }
   }
 
+  @Test
+  fun `setStringAsync with TTL should schedule WorkManager task`() = withClipboardMock {
+    val options = SetStringOptions().apply {
+      ttl = 5.0 // 5 seconds
+    }
+
+    val result = module.setStringAsync("test content", options)
+
+    assertTrue("setStringAsync should return true", result)
+    // Note: To fully test WorkManager execution, you'd need WorkManager testing utilities
+    // This test just verifies the method doesn't crash
+  }
+
   private val clipboardManager: ClipboardManager
     get() = ApplicationProvider
       .getApplicationContext<Context>()

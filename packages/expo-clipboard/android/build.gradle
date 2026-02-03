@@ -23,4 +23,5 @@ dependencies {
   if (project.findProject(':expo-modules-test-core')) {
     testImplementation project(':expo-modules-test-core')
   }
+  testImplementation("androidx.work:work-testing:2.7.1")
 }
