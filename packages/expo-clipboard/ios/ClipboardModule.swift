@@ -20,12 +20,28 @@ public class ClipboardModule: Module {
       }
     }
 
-    AsyncFunction("setStringAsync") { (content: String?, options: SetStringOptions) -> Bool in
-      switch options.inputFormat {
+    AsyncFunction("setStringAsync") { (content: String?, options: SetStringOptions?) -> Bool in
+      guard let content = content else {
+        UIPasteboard.general.string = nil
+        return true
+      }
+
+      let inputFormat = options?.inputFormat ?? .plainText
+      let pasteboardOptions = self.createPasteboardOptions(options: options)
+
+      switch inputFormat {
       case .plainText:
-        UIPasteboard.general.string = content
+        if let pasteboardOptions = pasteboardOptions {
+          UIPasteboard.general.setItems([[UTType.plainText.identifier: content]], options: pasteboardOptions)
+        } else {
+          UIPasteboard.general.string = content
+        }
       case .html:
-        UIPasteboard.general.html = content
+        if let pasteboardOptions = pasteboardOptions {
+          UIPasteboard.general.setItems([[UTType.html.identifier: content]], options: pasteboardOptions)
+        } else {
+          UIPasteboard.general.html = content
+        }
       }
 
       return true
@@ -41,8 +57,14 @@ public class ClipboardModule: Module {
       return UIPasteboard.general.url?.absoluteString
     }
 
-    AsyncFunction("setUrlAsync") { (url: URL) in
-      UIPasteboard.general.url = url
+    AsyncFunction("setUrlAsync") { (url: URL, options: SetUrlOptions?) in
+      let pasteboardOptions = self.createPasteboardOptions(options: options)
+
+      if let pasteboardOptions = pasteboardOptions {
+        UIPasteboard.general.setItems([[UTType.url.identifier: url]], options: pasteboardOptions)
+      } else {
+        UIPasteboard.general.url = url
+      }
     }
 
     AsyncFunction("hasUrlAsync") { () -> Bool in
@@ -51,12 +73,22 @@ public class ClipboardModule: Module {
 
     // MARK: - Images
 
-    AsyncFunction("setImageAsync") { (content: String) in
+    AsyncFunction("setImageAsync") { (content: String, options: SetImageOptions?) in
       guard let data = Data(base64Encoded: content),
             let image = UIImage(data: data) else {
         throw InvalidImageException(content)
       }
-      UIPasteboard.general.image = image
+
+      let pasteboardOptions = self.createPasteboardOptions(options: options)
+
+      if let pasteboardOptions = pasteboardOptions {
+        // Use the original data instead of UIImage object for property list compatibility
+        // Detect image format and use the appropriate UTI for proper recognition by the pasteboard
+        let imageType = self.detectImageType(from: data)
+        UIPasteboard.general.setItems([[imageType: data]], options: pasteboardOptions)
+      } else {
+        UIPasteboard.general.image = image
+      }
     }
 
     AsyncFunction("hasImageAsync") { () -> Bool in
@@ -151,6 +183,38 @@ public class ClipboardModule: Module {
     sendEvent(onClipboardChanged, [
       "contentTypes": availableContentTypes()
     ])
+  }
+
+  private func createPasteboardOptions(options: SetClipboardOptionsProtocol?) -> [UIPasteboard.OptionsKey: Any]? {
+    guard let ttl = options?.ttl, ttl > 0 else {
+      return nil
+    }
+
+    let expirationDate = Date().addingTimeInterval(ttl)
+    return [.expirationDate: expirationDate]
+  }
+
+  private func detectImageType(from data: Data) -> String {
+    // Check for PNG signature (89 50 4E 47 0D 0A 1A 0A)
+    if data.count >= 8 {
+      let pngSignature: [UInt8] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
+      let header = [UInt8](data.prefix(8))
+      if header == pngSignature {
+        return UTType.png.identifier
+      }
+    }
+
+    // Check for JPEG signature (FF D8 FF)
+    if data.count >= 3 {
+      let jpegSignature: [UInt8] = [0xFF, 0xD8, 0xFF]
+      let header = [UInt8](data.prefix(3))
+      if header == jpegSignature {
+        return UTType.jpeg.identifier
+      }
+    }
+
+    // Fallback to generic image type
+    return UTType.image.identifier
   }
 }
 

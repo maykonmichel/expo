@@ -29,10 +29,26 @@ internal struct GetStringOptions: Record {
   var preferredFormat: StringFormat = .plainText
 }
 
-internal struct SetStringOptions: Record {
+internal protocol SetClipboardOptionsProtocol {
+  var ttl: Double? { get }
+}
+
+internal struct CommonSetClipboardOptions: Record, SetClipboardOptionsProtocol {
+  @Field
+  var ttl: Double?
+}
+
+internal struct SetStringOptions: Record, SetClipboardOptionsProtocol {
   @Field
   var inputFormat: StringFormat = .plainText
+
+  @Field
+  var ttl: Double?
 }
+
+internal typealias SetUrlOptions = CommonSetClipboardOptions
+
+internal typealias SetImageOptions = CommonSetClipboardOptions
 
 internal enum StringFormat: String, Enumerable {
   case plainText
