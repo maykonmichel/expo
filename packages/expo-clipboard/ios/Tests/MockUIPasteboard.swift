@@ -2,6 +2,7 @@ import UIKit
 
 class MockUIPasteboard: UIPasteboard {
   var _items: [String: Any] = [:]
+  var lastSetOptions: [UIPasteboard.OptionsKey: Any]?
 
   override var items: [[String: Any]] {
     get {
@@ -14,7 +15,7 @@ class MockUIPasteboard: UIPasteboard {
 
   override var string: String? {
     get {
-      return _items["string"] as? String
+      return _items["public.plain-text"] as? String ?? _items["string"] as? String
     }
     set {
       _items = ["string": newValue as Any]
@@ -23,7 +24,7 @@ class MockUIPasteboard: UIPasteboard {
 
   override var url: URL? {
     get {
-      return _items["url"] as? URL
+      return _items["public.url"] as? URL ?? _items["url"] as? URL
     }
     set {
       _items = ["url": newValue as Any]
@@ -32,7 +33,17 @@ class MockUIPasteboard: UIPasteboard {
 
   override var image: UIImage? {
     get {
-      return _items["image"] as? UIImage
+      // Handle both UIImage objects and Data
+      // Check for generic image types
+      if let image = _items["public.image"] as? UIImage ?? _items["image"] as? UIImage {
+        return image
+      }
+      // Check for specific image types (PNG, JPEG)
+      if let data = _items["public.image"] as? Data ?? _items["image"] as? Data ??
+                    _items["public.png"] as? Data ?? _items["public.jpeg"] as? Data {
+        return UIImage(data: data)
+      }
+      return nil
     }
     set {
       _items = ["image": newValue as Any]
@@ -40,15 +51,21 @@ class MockUIPasteboard: UIPasteboard {
   }
 
   override var hasStrings: Bool {
-    return _items["string"] != nil
+    return _items["public.plain-text"] != nil || _items["string"] != nil
   }
 
   override var hasImages: Bool {
-    return _items["image"] != nil
+    let hasImageItem = _items["public.image"] != nil || _items["image"] != nil ||
+                       _items["public.png"] != nil || _items["public.jpeg"] != nil
+    if !hasImageItem {
+      return false
+    }
+    // Verify the item is actually valid image data
+    return self.image != nil
   }
 
   override var hasURLs: Bool {
-    return _items["url"] != nil
+    return _items["public.url"] != nil || _items["url"] != nil
   }
 
   override func value(forPasteboardType pasteboardType: String) -> Any? {
@@ -61,6 +78,7 @@ class MockUIPasteboard: UIPasteboard {
 
   override func setItems(_ items: [[String: Any]], options: [UIPasteboard.OptionsKey: Any] = [:]) {
     self.items = items
+    lastSetOptions = options.isEmpty ? nil : options
   }
 
   override func contains(pasteboardTypes: [String]) -> Bool {

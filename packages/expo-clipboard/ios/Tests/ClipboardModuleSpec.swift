@@ -97,6 +97,34 @@ class ClipboardModuleSpec: ExpoSpec {
         }
       }
 
+      it("copies string to clipboard with TTL") {
+        let expectedString = "hello with ttl"
+        let ttl = 3600.0
+        let options: [String: Any] = [
+          "inputFormat": "plainText",
+          "ttl": ttl
+        ]
+        let expectedExpirationDate = Date().addingTimeInterval(ttl)
+
+        testModuleFunction(function, args: [expectedString, options]) { (result: Bool?) in
+          let mockPasteboard = UIPasteboard.StaticVars.mockPastebaord
+          expect(result) == true
+          expect(UIPasteboard.general.hasStrings) == true
+          expect(UIPasteboard.general.string) == expectedString
+
+          // Verify that options were passed with expirationDate
+          expect(mockPasteboard.lastSetOptions).toNot(beNil())
+          let expirationDate = mockPasteboard.lastSetOptions?[.expirationDate] as? Date
+          expect(expirationDate).toNot(beNil())
+
+          // Verify expiration date is approximately correct (within 1 second tolerance)
+          if let expirationDate = expirationDate {
+            let timeDifference = abs(expirationDate.timeIntervalSince(expectedExpirationDate))
+            expect(timeDifference).to(beLessThan(1.0))
+          }
+        }
+      }
+
       it("copies HTML to clipboard") {
         let expectedHtml = "<p>hello</p>"
         let options = [
@@ -109,6 +137,33 @@ class ClipboardModuleSpec: ExpoSpec {
           expect(mockPasteboard._items[kUTTypeRTF as String]).notTo(beNil())
           expect(mockPasteboard._items[kUTTypeHTML as String] as? String).to(contain("hello"))
           expect(mockPasteboard._items[kUTTypeUTF8PlainText as String] as? String).to(contain("hello"))
+        }
+      }
+
+      it("copies HTML to clipboard with TTL") {
+        let expectedHtml = "<p>hello with ttl</p>"
+        let ttl = 3600.0
+        let options: [String: Any] = [
+          "inputFormat": "html",
+          "ttl": ttl
+        ]
+        let expectedExpirationDate = Date().addingTimeInterval(ttl)
+
+        testModuleFunction(function, args: [expectedHtml, options]) { (result: Bool?) in
+          let mockPasteboard = UIPasteboard.StaticVars.mockPastebaord
+          expect(result) == true
+          expect(mockPasteboard._items[kUTTypeHTML as String] as? String).to(contain("hello with ttl"))
+
+          // Verify that options were passed with expirationDate
+          expect(mockPasteboard.lastSetOptions).toNot(beNil())
+          let expirationDate = mockPasteboard.lastSetOptions?[.expirationDate] as? Date
+          expect(expirationDate).toNot(beNil())
+
+          // Verify expiration date is approximately correct (within 1 second tolerance)
+          if let expirationDate = expirationDate {
+            let timeDifference = abs(expirationDate.timeIntervalSince(expectedExpirationDate))
+            expect(timeDifference).to(beLessThan(1.0))
+          }
         }
       }
     }
@@ -157,6 +212,31 @@ class ClipboardModuleSpec: ExpoSpec {
           expect(UIPasteboard.general.hasImages) == true
           // compare first 10 characters only as UIImage can optimize the data so it differs
           expect(pasteboardImgData?.prefix(10)) == testImageBase64.prefix(10)
+        }
+      }
+
+      it("copies image to clipboard with TTL") {
+        let ttl = 3600.0
+        let options: [String: Any] = ["ttl": ttl]
+        let expectedExpirationDate = Date().addingTimeInterval(ttl)
+
+        testModuleFunction("setImageAsync", args: [testImageBase64, options]) { (_: Any?) in
+          let mockPasteboard = UIPasteboard.StaticVars.mockPastebaord
+          let pasteboardImgData = UIPasteboard.general.image?.pngData()?.base64EncodedString()
+          expect(UIPasteboard.general.hasImages) == true
+          // compare first 10 characters only as UIImage can optimize the data so it differs
+          expect(pasteboardImgData?.prefix(10)) == testImageBase64.prefix(10)
+
+          // Verify that options were passed with expirationDate
+          expect(mockPasteboard.lastSetOptions).toNot(beNil())
+          let expirationDate = mockPasteboard.lastSetOptions?[.expirationDate] as? Date
+          expect(expirationDate).toNot(beNil())
+
+          // Verify expiration date is approximately correct (within 1 second tolerance)
+          if let expirationDate = expirationDate {
+            let timeDifference = abs(expirationDate.timeIntervalSince(expectedExpirationDate))
+            expect(timeDifference).to(beLessThan(1.0))
+          }
         }
       }
 
@@ -251,6 +331,30 @@ class ClipboardModuleSpec: ExpoSpec {
         testModuleFunction("setUrlAsync", args: [urlString]) { (_: Any?) in
           expect(UIPasteboard.general.hasURLs) == true
           expect(UIPasteboard.general.url?.absoluteString) == urlString
+        }
+      }
+
+      it("copies URL to the clipboard with TTL") {
+        let urlString = "https://expo.dev/with-ttl"
+        let ttl = 3600.0
+        let options: [String: Any] = ["ttl": ttl]
+        let expectedExpirationDate = Date().addingTimeInterval(ttl)
+
+        testModuleFunction("setUrlAsync", args: [urlString, options]) { (_: Any?) in
+          let mockPasteboard = UIPasteboard.StaticVars.mockPastebaord
+          expect(UIPasteboard.general.hasURLs) == true
+          expect(UIPasteboard.general.url?.absoluteString) == urlString
+
+          // Verify that options were passed with expirationDate
+          expect(mockPasteboard.lastSetOptions).toNot(beNil())
+          let expirationDate = mockPasteboard.lastSetOptions?[.expirationDate] as? Date
+          expect(expirationDate).toNot(beNil())
+
+          // Verify expiration date is approximately correct (within 1 second tolerance)
+          if let expirationDate = expirationDate {
+            let timeDifference = abs(expirationDate.timeIntervalSince(expectedExpirationDate))
+            expect(timeDifference).to(beLessThan(1.0))
+          }
         }
       }
     }
