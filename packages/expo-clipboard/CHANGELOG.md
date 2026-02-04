@@ -6,6 +6,8 @@
 
 ### 🎉 New features
 
+- Added `ttl` option to `setStringAsync`, `setImageAsync`, and `setUrlAsync` methods for automatic clipboard expiration. ([#XXXXX](https://github.com/expo/expo/pull/XXXXX) by [@maykonmichel](https://github.com/maykonmichel))
+
 ### 🐛 Bug fixes
 
 ### 💡 Others
