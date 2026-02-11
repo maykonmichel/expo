@@ -91,6 +91,32 @@ export type SetStringAndroidOptions = {
   isSensitive?: boolean;
 };
 
+/**
+ * @platform ios
+ */
+export type SetStringIOSOptions = {
+  /**
+   * Whether the copied content is local to the current device only.
+   *
+   * When set to `true`, the copied content is not shared with your other devices through
+   * Handoff/Universal Clipboard.
+   *
+   * This maps to iOS
+   * [`UIPasteboard.OptionsKey.localOnly`](https://developer.apple.com/documentation/uikit/uipasteboard/optionskey/localonly).
+   *
+   * @default false
+   * @platform ios
+   * @example
+   * ```ts
+   * // Keep copied text on the current device only
+   * await Clipboard.setStringAsync('API_KEY_12345', {
+   *   ios: { localOnly: true }
+   * });
+   * ```
+   */
+  localOnly?: boolean;
+};
+
 export type SetStringOptions = {
   /**
    * The input format of the provided string.
@@ -104,6 +130,37 @@ export type SetStringOptions = {
    * @platform android
    */
   android?: SetStringAndroidOptions;
+  /**
+   * iOS-specific options for clipboard behavior.
+   * @platform ios
+   */
+  ios?: SetStringIOSOptions;
+};
+
+/**
+ * @platform ios
+ */
+export type SetUrlOptions = {
+  /**
+   * Whether the copied content is local to the current device only.
+   *
+   * When set to `true`, the copied content is not shared with your other devices through
+   * Handoff/Universal Clipboard.
+   *
+   * This maps to iOS
+   * [`UIPasteboard.OptionsKey.localOnly`](https://developer.apple.com/documentation/uikit/uipasteboard/optionskey/localonly).
+   *
+   * @default false
+   * @platform ios
+   * @example
+   * ```ts
+   * // Keep copied URL on the current device only
+   * await Clipboard.setUrlAsync('https://secret.internal', {
+   *   localOnly: true
+   * });
+   * ```
+   */
+  localOnly?: boolean;
 };
 
 /**
@@ -130,12 +187,43 @@ export type SetImageAndroidOptions = {
   isSensitive?: boolean;
 };
 
+/**
+ * @platform ios
+ */
+export type SetImageIOSOptions = {
+  /**
+   * Whether the copied content is local to the current device only.
+   *
+   * When set to `true`, the copied content is not shared with your other devices through
+   * Handoff/Universal Clipboard.
+   *
+   * This maps to iOS
+   * [`UIPasteboard.OptionsKey.localOnly`](https://developer.apple.com/documentation/uikit/uipasteboard/optionskey/localonly).
+   *
+   * @default false
+   * @platform ios
+   * @example
+   * ```ts
+   * // Keep copied image on the current device only
+   * await Clipboard.setImageAsync(base64Image, {
+   *   ios: { localOnly: true }
+   * });
+   * ```
+   */
+  localOnly?: boolean;
+};
+
 export type SetImageOptions = {
   /**
    * Android-specific options for clipboard behavior.
    * @platform android
    */
   android?: SetImageAndroidOptions;
+  /**
+   * iOS-specific options for clipboard behavior.
+   * @platform ios
+   */
+  ios?: SetImageIOSOptions;
 };
 
 export type AcceptedContentType = 'plain-text' | 'image' | 'url' | 'html';

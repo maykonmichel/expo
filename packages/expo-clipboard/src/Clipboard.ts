@@ -1,12 +1,13 @@
-import { type EventSubscription, UnavailabilityError, Platform } from 'expo';
+import { type EventSubscription, Platform, UnavailabilityError } from 'expo';
 
 import type {
-  ClipboardImage,
   ClipboardEvent,
+  ClipboardImage,
   GetImageOptions,
   GetStringOptions,
-  SetStringOptions,
   SetImageOptions,
+  SetStringOptions,
+  SetUrlOptions,
 } from './Clipboard.types';
 import ExpoClipboard, { clipboardEventName } from './ExpoClipboard';
 import { flattenPlatformOptions } from './utils/options';
@@ -88,14 +89,15 @@ export async function getUrlAsync(): Promise<string | null> {
  * clipboard contains a URL and behave accordingly.
  *
  * @param url The URL to save to the clipboard.
+ * @param options Options for the clipboard content to be set.
  * @platform ios
  * @platform macos
  */
-export async function setUrlAsync(url: string): Promise<void> {
+export async function setUrlAsync(url: string, options: SetUrlOptions = {}): Promise<void> {
   if (!ExpoClipboard.setUrlAsync) {
     throw new UnavailabilityError('Clipboard', 'setUrlAsync');
   }
-  return ExpoClipboard.setUrlAsync(url);
+  return ExpoClipboard.setUrlAsync(url, options);
 }
 
 /**
