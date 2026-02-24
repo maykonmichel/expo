@@ -3,6 +3,7 @@ import UniformTypeIdentifiers
 
 class MockUIPasteboard: UIPasteboard {
   var _items: [String: Any] = [:]
+  var _options: [UIPasteboard.OptionsKey: Any] = [:]
 
   override var items: [[String: Any]] {
     get {
@@ -104,6 +105,7 @@ class MockUIPasteboard: UIPasteboard {
 
   override func setItems(_ items: [[String: Any]], options: [UIPasteboard.OptionsKey: Any] = [:]) {
     self.items = items
+    self._options = options
   }
 
   override func contains(pasteboardTypes: [String]) -> Bool {

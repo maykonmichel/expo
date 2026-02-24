@@ -85,6 +85,14 @@ struct ClipboardModuleTests {
   }
 
   @Test
+  func `setStringAsync sets localOnly pasteboard option when requested`() async throws {
+    _ = try await runtime.evalAsync("expo.modules.ExpoClipboard.setStringAsync('hello', { inputFormat: 'plainText', localOnly: true })")
+    let mockPasteboard = UIPasteboard.StaticVars.mockPastebaord
+
+    #expect(mockPasteboard._options[.localOnly] as? Bool == true)
+  }
+
+  @Test
   func `hasStringAsync returns true when clipboard contains a string`() async throws {
     UIPasteboard.general.string = "hello world"
 
@@ -133,6 +141,14 @@ struct ClipboardModuleTests {
       .evalAsync("expo.modules.ExpoClipboard.setImageAsync('invalid', {}).then(() => null, (e) => e)")
       .asObject()
     #expect(error.getProperty("message").getString().contains("Invalid base64 image"))
+  }
+
+  @Test
+  func `setImageAsync sets localOnly pasteboard option when requested`() async throws {
+    _ = try await runtime.evalAsync("expo.modules.ExpoClipboard.setImageAsync('\(Self.testImageBase64)', { localOnly: true })")
+    let mockPasteboard = UIPasteboard.StaticVars.mockPastebaord
+
+    #expect(mockPasteboard._options[.localOnly] as? Bool == true)
   }
 
   @Test
@@ -203,6 +219,16 @@ struct ClipboardModuleTests {
     _ = try await runtime.evalAsync("expo.modules.ExpoClipboard.setUrlAsync('\(urlString)')")
     #expect(UIPasteboard.general.hasURLs == true)
     #expect(UIPasteboard.general.url?.absoluteString == urlString)
+  }
+
+  @Test
+  func `setUrlAsync sets localOnly pasteboard option when requested`() async throws {
+    let urlString = "https://expo.dev"
+
+    _ = try await runtime.evalAsync("expo.modules.ExpoClipboard.setUrlAsync('\(urlString)', { localOnly: true })")
+    let mockPasteboard = UIPasteboard.StaticVars.mockPastebaord
+
+    #expect(mockPasteboard._options[.localOnly] as? Bool == true)
   }
 
   @Test
