@@ -20,11 +20,26 @@ public class ClipboardModule: Module {
     }
 
     AsyncFunction("setStringAsync") { (content: String?, options: SetStringOptions) -> Bool in
+      guard let content else {
+        UIPasteboard.general.setItems([])
+        return true
+      }
+
       switch options.inputFormat {
       case .plainText:
-        UIPasteboard.general.string = content
+        UIPasteboard.general.setItems([[
+          UTType.utf8PlainText.identifier: content
+        ]])
       case .html:
-        UIPasteboard.general.html = content
+        guard let attributedString = try? NSAttributedString(htmlString: content) else {
+          UIPasteboard.general.string = ""
+          return true
+        }
+        UIPasteboard.general.setItems([[
+          UTType.rtf.identifier: attributedString.rtfData as Any,
+          UTType.html.identifier: attributedString.htmlString as Any,
+          UTType.utf8PlainText.identifier: attributedString.string
+        ]])
       }
 
       return true
@@ -41,7 +56,10 @@ public class ClipboardModule: Module {
     }
 
     AsyncFunction("setUrlAsync") { (url: URL) in
-      UIPasteboard.general.url = url
+      UIPasteboard.general.setItems([[
+        UTType.url.identifier: url,
+        UTType.utf8PlainText.identifier: url.absoluteString
+      ]])
     }
 
     AsyncFunction("hasUrlAsync") { () -> Bool in
@@ -55,7 +73,22 @@ public class ClipboardModule: Module {
             let image = UIImage(data: data) else {
         throw InvalidImageException(content)
       }
-      UIPasteboard.general.image = image
+
+      var item: [String: Any] = [:]
+
+      if let pngData = image.pngData() {
+        item[UTType.png.identifier] = pngData
+      }
+
+      if let jpegData = image.jpegData(compressionQuality: 1) {
+        item[UTType.jpeg.identifier] = jpegData
+      }
+
+      guard !item.isEmpty else {
+        throw InvalidImageException(content)
+      }
+
+      UIPasteboard.general.setItems([item])
     }
 
     AsyncFunction("hasImageAsync") { () -> Bool in
