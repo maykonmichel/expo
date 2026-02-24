@@ -71,13 +71,23 @@ const SET_STRING_ASYNC_CONFIG: FunctionDescription = {
             },
           ],
         },
+        {
+          name: 'ios',
+          type: 'object',
+          platforms: ['ios'],
+          properties: [
+            {
+              name: 'localOnly',
+              type: 'boolean',
+              platforms: ['ios'],
+              initial: false,
+            },
+          ],
+        },
       ],
     },
   ],
-  actions: (
-    value: string,
-    options: { inputFormat: Clipboard.StringFormat; android?: { isSensitive?: boolean } }
-  ) => Clipboard.setStringAsync(value, options),
+  actions: Clipboard.setStringAsync,
 };
 
 const GET_STRING_ASYNC_CONFIG: FunctionDescription = {
@@ -129,6 +139,19 @@ const SET_IMAGE_ASYNC_CONFIG: FunctionDescription = {
             },
           ],
         },
+        {
+          name: 'ios',
+          type: 'object',
+          platforms: ['ios'],
+          properties: [
+            {
+              name: 'localOnly',
+              type: 'boolean',
+              platforms: ['ios'],
+              initial: false,
+            },
+          ],
+        },
       ],
     },
   ],
@@ -143,7 +166,11 @@ const SET_IMAGE_ASYNC_CONFIG: FunctionDescription = {
       ],
     },
   ],
-  actions: async (_, options: { android?: { isSensitive?: boolean } }, quality) => {
+  actions: async (
+    _,
+    options: { android?: { isSensitive?: boolean }; ios?: { localOnly?: boolean } },
+    quality
+  ) => {
     const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (granted) {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -203,6 +230,17 @@ const SET_URL_ASYNC_CONFIG: FunctionDescription = {
       name: 'url',
       type: 'constant',
       value: 'https://expo.dev',
+    },
+    {
+      name: 'options',
+      type: 'object',
+      properties: [
+        {
+          name: 'localOnly',
+          type: 'boolean',
+          initial: false,
+        },
+      ],
     },
   ],
   actions: Clipboard.setUrlAsync,

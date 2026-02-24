@@ -85,6 +85,29 @@ export function test({ describe, expect, it, afterEach, ...t }) {
           });
           expect(result.trim()).toEqual('sensitive html');
         });
+      } else if (Platform.OS === 'ios') {
+        it('sets a string with localOnly option', async () => {
+          await Clipboard.setStringAsync('local only data', { ios: { localOnly: true } });
+          const result = await Clipboard.getStringAsync();
+          expect(result).toEqual('local only data');
+        });
+
+        it('sets a string with localOnly false', async () => {
+          await Clipboard.setStringAsync('shared data', { ios: { localOnly: false } });
+          const result = await Clipboard.getStringAsync();
+          expect(result).toEqual('shared data');
+        });
+
+        it('sets HTML string with localOnly option', async () => {
+          await Clipboard.setStringAsync('<p>local html</p>', {
+            inputFormat: Clipboard.StringFormat.HTML,
+            ios: { localOnly: true },
+          });
+          const result = await Clipboard.getStringAsync({
+            preferredFormat: Clipboard.StringFormat.PLAIN_TEXT,
+          });
+          expect(result.trim()).toEqual('local html');
+        });
       }
     });
 
@@ -97,6 +120,20 @@ export function test({ describe, expect, it, afterEach, ...t }) {
           await Clipboard.setUrlAsync(exampleUrl);
           hasUrl = await Clipboard.hasUrlAsync();
           expect(hasUrl).toEqual(true);
+          const result = await Clipboard.getUrlAsync();
+          expect(result).toEqual(exampleUrl);
+        });
+
+        it('sets an url with localOnly option', async () => {
+          const exampleUrl = 'https://example.com';
+          await Clipboard.setUrlAsync(exampleUrl, { localOnly: true });
+          const result = await Clipboard.getUrlAsync();
+          expect(result).toEqual(exampleUrl);
+        });
+
+        it('sets an url with localOnly false', async () => {
+          const exampleUrl = 'https://example.com';
+          await Clipboard.setUrlAsync(exampleUrl, { localOnly: false });
           const result = await Clipboard.getUrlAsync();
           expect(result).toEqual(exampleUrl);
         });
@@ -155,6 +192,28 @@ export function test({ describe, expect, it, afterEach, ...t }) {
               'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
             const expectedResultRegex = 'data:image/png;base64,[A-Za-z0-9+/=]*';
             await Clipboard.setImageAsync(imageBase64, { android: { isSensitive: false } });
+            const hasImage = await Clipboard.hasImageAsync();
+            expect(hasImage).toEqual(true);
+            const result = await Clipboard.getImageAsync({ format: 'png' });
+            expect(result.data).toMatch(expectedResultRegex);
+          });
+        } else if (Platform.OS === 'ios') {
+          it('sets an image with localOnly option', async () => {
+            const imageBase64 =
+              'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+            const expectedResultRegex = 'data:image/png;base64,[A-Za-z0-9+/=]*';
+            await Clipboard.setImageAsync(imageBase64, { ios: { localOnly: true } });
+            const hasImage = await Clipboard.hasImageAsync();
+            expect(hasImage).toEqual(true);
+            const result = await Clipboard.getImageAsync({ format: 'png' });
+            expect(result.data).toMatch(expectedResultRegex);
+          });
+
+          it('sets an image with localOnly false', async () => {
+            const imageBase64 =
+              'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+            const expectedResultRegex = 'data:image/png;base64,[A-Za-z0-9+/=]*';
+            await Clipboard.setImageAsync(imageBase64, { ios: { localOnly: false } });
             const hasImage = await Clipboard.hasImageAsync();
             expect(hasImage).toEqual(true);
             const result = await Clipboard.getImageAsync({ format: 'png' });
