@@ -29,17 +29,20 @@ public class ClipboardModule: Module {
       case .plainText:
         UIPasteboard.general.setItems([[
           UTType.utf8PlainText.identifier: content
-        ]])
+        ]], options: pasteboardOptions(from: options))
       case .html:
         guard let attributedString = try? NSAttributedString(htmlString: content) else {
           UIPasteboard.general.string = ""
           return true
         }
-        UIPasteboard.general.setItems([[
-          UTType.rtf.identifier: attributedString.rtfData as Any,
-          UTType.html.identifier: attributedString.htmlString as Any,
-          UTType.utf8PlainText.identifier: attributedString.string
-        ]])
+          UIPasteboard.general.setItems(
+            [[
+              UTType.rtf.identifier: attributedString.rtfData as Any,
+              UTType.html.identifier: attributedString.htmlString as Any,
+              UTType.utf8PlainText.identifier: attributedString.string
+            ]],
+            options: pasteboardOptions(from: options)
+          )
       }
 
       return true
@@ -55,11 +58,14 @@ public class ClipboardModule: Module {
       return UIPasteboard.general.url?.absoluteString
     }
 
-    AsyncFunction("setUrlAsync") { (url: URL) in
-      UIPasteboard.general.setItems([[
-        UTType.url.identifier: url,
-        UTType.utf8PlainText.identifier: url.absoluteString
-      ]])
+    AsyncFunction("setUrlAsync") { (url: URL, options: SetUrlOptions) in
+      UIPasteboard.general.setItems(
+        [[
+          UTType.url.identifier: url,
+          UTType.utf8PlainText.identifier: url.absoluteString
+        ]],
+        options: pasteboardOptions(from: options)
+      )
     }
 
     AsyncFunction("hasUrlAsync") { () -> Bool in
@@ -68,7 +74,7 @@ public class ClipboardModule: Module {
 
     // MARK: - Images
 
-    AsyncFunction("setImageAsync") { (content: String, _options: SetImageOptions) in
+    AsyncFunction("setImageAsync") { (content: String, options: SetImageOptions) in
       guard let data = Data(base64Encoded: content),
             let image = UIImage(data: data) else {
         throw InvalidImageException(content)
@@ -88,7 +94,10 @@ public class ClipboardModule: Module {
         throw InvalidImageException(content)
       }
 
-      UIPasteboard.general.setItems([item])
+      UIPasteboard.general.setItems(
+        [item],
+        options: pasteboardOptions(from: options)
+      )
     }
 
     AsyncFunction("hasImageAsync") { () -> Bool in
@@ -199,6 +208,14 @@ private func imageToData(_ image: UIImage, options: GetImageOptions) -> Data? {
     case .jpeg: return image.jpegData(compressionQuality: options.jpegQuality)
     case .png: return image.pngData()
   }
+}
+
+private func pasteboardOptions(from options: SetClipboardOptionsProtocol) -> [UIPasteboard.OptionsKey: Any] {
+  var pasteboardOptions: [UIPasteboard.OptionsKey: Any] = [:]
+  if let localOnly = options.localOnly {
+    pasteboardOptions[.localOnly] = localOnly
+  }
+  return pasteboardOptions
 }
 
 private func availableContentTypes() -> [String] {
